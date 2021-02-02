@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %} Cadastrar novo produto {% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            {{msg}}
+        {% endfor%}
+    {% endif %}
+{% endwith %}
+<body>
+        <form method="POST" action="" enctype="multipart/form-data" name="formTeste">
+            <p><label for="Nome">Nome do produto:</label>
+            <input type="text" name="Nome" id="Nome"></p>
+
+            <p><label for="Nome">Valor por unidade:</label>
+            <input type="text" name="ValorUnitario" id="Valor"></p>
+
+            <p><label for="Nome">Unidade</label>
+            <input type="text" name="Unidade" id="Unidade"></p>
+
+            <p><label for="Nome">Embalagem mínima:</label>
+            <input type="text" name="PacoteMax" id="PacoteMax"></p>
+
+            <p><label for="Nome">Embalagem máxima:</label>
+            <input type="text" name="PacoteMin" id="PacoteMin"></p>
+
+            <p><input type="submit" value="Submit" onclick="submitform()"></p>
+    </form>
+</body>
+{% endblock content %}

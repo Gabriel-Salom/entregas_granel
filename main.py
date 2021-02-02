@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, make_response
+from flask import Flask, request, jsonify, render_template, redirect, url_for, make_response, flash,  send_from_directory
 from flask_restful import Api, Resource, reqparse, abort, fields, marshal_with
 from authlib.integrations.flask_client import OAuth
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from werkzeug.utils import secure_filename
 import os
 import pytz
 
@@ -14,7 +15,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 api = Api(app)
 
 # App sessions
-app.secret_key = 'jamiley'
+app.secret_key = os.getenv('SECRET_KEY')
 #google auth
 oauth = OAuth(app)
 google = oauth.register(
@@ -34,6 +35,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Init db
 db = SQLAlchemy(app)
+
+# App imgs
+app.config["IMAGE_UPLOADS"] = os.path.join(basedir, "static/product_images")
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF"]
+app.config["MAX_IMAGE_FILESIZE"] = 0.5 * 1024 * 1024
 
 # Classes/Models for the database
 class Cliente(db.Model):
@@ -97,9 +103,50 @@ class Produto(db.Model):
         self.PacoteMin = PacoteMin
 
 
-@app.route('/')
-def hello():
-    return "hello world!"
+# Landing page
+@app.route("/")
+def home():
+    return render_template('home.html')
+
+# Landing page
+@app.route("/new-product", methods=['GET', 'POST'])
+def newProduct():
+    if request.method == 'GET':
+        return render_template('new-product.html')
+    if request.method == 'POST':
+        print(request.form['Nome'])
+        produto = Produto.query.filter_by(Nome = request.form['Nome']).first()
+        if produto != None:
+            flash('Este produto já existe, procure outro para alterar', 'info')
+            return redirect(url_for('newProduct'))
+        elif produto == None:
+            tz = pytz.timezone('Brazil/East')
+            now = datetime.now(tz)
+            date_string = now.strftime("%d/%m/%Y %H:%M:%S")
+            UrlImage = secure_filename(request.form['Nome'].strip() + date_string)
+            Nome = request.form['Nome']
+            ValorUnitario = request.form['ValorUnitario']
+            Unidade = request.form['Unidade']
+            PacoteMax = request.form['PacoteMax']
+            PacoteMin = request.form['PacoteMin']
+            new_produto = Produto(UrlImage, Nome, ValorUnitario, Unidade, PacoteMax, PacoteMin)
+            db.session.add(new_produto)
+            db.session.commit()
+            return redirect(url_for('upload_image', product = request.form['Nome'], urlImage = UrlImage))
+# Image
+
+@app.route("/new-product-image/<string:product>/<string:urlImage>", methods=['GET', 'POST'])
+def upload_image(product, urlImage):
+    if request.method == 'GET':
+        return render_template('new-product-image.html',  product = product, urlImage = urlImage)
+    if request.method == 'POST':
+        print(urlImage)
+        uploaded_image = request.files['file']
+        filename = secure_filename(urlImage)
+        uploaded_image.save(os.path.join(app.config["IMAGE_UPLOADS"], filename + '.png'))
+        return redirect(url_for('home'))
+
+
 
 @app.cli.command('initdb')
 def reset_db():

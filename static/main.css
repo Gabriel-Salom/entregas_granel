@@ -1,0 +1,8 @@
+.product {
+  text-align: center;
+  border-radius: 10px;
+  height: fit-content;
+  width: fit-content;
+  border: 1px solid rgb(19, 48, 19);
+  margin: 5px;
+}

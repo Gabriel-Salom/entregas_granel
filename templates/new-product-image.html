@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block content %}
+<body>
+    <h1>Produto: {{ product }} </h1>
+        <form method="POST" action="" enctype="multipart/form-data" name="formTeste">
+            <p><input type="file" name="file"></p>
+            <p><input type="submit" value="Submit" onclick="submitform()"></p>
+    </form>
+</body>
+{% endblock content %}
